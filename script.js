@@ -136,3 +136,139 @@ const stepObserver = new IntersectionObserver(
 )
 
 stepNumbers.forEach((step) => stepObserver.observe(step))
+
+// Team Slider Functionality
+const teamSlider = document.getElementById('teamSlider')
+const prevBtn = document.getElementById('prevBtn')
+const nextBtn = document.getElementById('nextBtn')
+const sliderDots = document.getElementById('sliderDots')
+const slides = document.querySelectorAll('.team-slide')
+
+let currentSlide = 0
+const totalSlides = slides.length
+
+// Create dots
+function createDots() {
+  const slidesPerView = getSlidesPerView()
+  const numberOfDots = Math.max(1, totalSlides - slidesPerView + 1)
+  
+  sliderDots.innerHTML = '' // Clear existing dots
+  
+  for (let i = 0; i < numberOfDots; i++) {
+    const dot = document.createElement('div')
+    dot.classList.add('dot')
+    if (i === 0) dot.classList.add('active')
+    dot.addEventListener('click', () => goToSlide(i))
+    sliderDots.appendChild(dot)
+  }
+}
+
+// Update slider position
+function updateSlider() {
+  const slideWidth = slides[0].offsetWidth
+  const gap = 32 // Gap between slides (2rem)
+  const slidesPerView = getSlidesPerView()
+  const maxSlide = Math.max(0, totalSlides - slidesPerView)
+  
+  // Ensure currentSlide doesn't exceed maximum
+  if (currentSlide > maxSlide) {
+    currentSlide = maxSlide
+  }
+  
+  teamSlider.style.transform = `translateX(-${currentSlide * (slideWidth + gap)}px)`
+  
+  // Update dots
+  const dots = document.querySelectorAll('.dot')
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('active', index === currentSlide)
+  })
+}
+
+// Get number of slides visible based on screen size
+function getSlidesPerView() {
+  if (window.innerWidth <= 768) return 1
+  if (window.innerWidth <= 1024) return 2
+  return 3
+}
+
+// Go to specific slide
+function goToSlide(slideIndex) {
+  const slidesPerView = getSlidesPerView()
+  const maxSlide = Math.max(0, totalSlides - slidesPerView)
+  currentSlide = Math.min(Math.max(0, slideIndex), maxSlide)
+  updateSlider()
+}
+
+// Next slide
+function nextSlide() {
+  const slidesPerView = getSlidesPerView()
+  const maxSlide = Math.max(0, totalSlides - slidesPerView)
+  currentSlide = currentSlide >= maxSlide ? 0 : currentSlide + 1
+  updateSlider()
+}
+
+// Previous slide
+function prevSlide() {
+  const slidesPerView = getSlidesPerView()
+  const maxSlide = Math.max(0, totalSlides - slidesPerView)
+  currentSlide = currentSlide <= 0 ? maxSlide : currentSlide - 1
+  updateSlider()
+}
+
+// Event listeners
+nextBtn.addEventListener('click', nextSlide)
+prevBtn.addEventListener('click', prevSlide)
+
+// Auto-play slider
+let autoPlayInterval = setInterval(nextSlide, 5000)
+
+// Pause auto-play on hover
+teamSlider.addEventListener('mouseenter', () => {
+  clearInterval(autoPlayInterval)
+})
+
+teamSlider.addEventListener('mouseleave', () => {
+  autoPlayInterval = setInterval(nextSlide, 5000)
+})
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') prevSlide()
+  if (e.key === 'ArrowRight') nextSlide()
+})
+
+// Touch/swipe support for mobile
+let touchStartX = 0
+let touchEndX = 0
+
+teamSlider.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX
+})
+
+teamSlider.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].screenX
+  handleSwipe()
+})
+
+function handleSwipe() {
+  const swipeThreshold = 50
+  const diff = touchStartX - touchEndX
+  
+  if (Math.abs(diff) > swipeThreshold) {
+    if (diff > 0) {
+      nextSlide() // Swipe left, go to next
+    } else {
+      prevSlide() // Swipe right, go to previous
+    }
+  }
+}
+
+// Initialize slider
+createDots()
+updateSlider()
+
+// Recalculate slider on window resize
+window.addEventListener('resize', () => {
+  createDots()
+  updateSlider()
+})
